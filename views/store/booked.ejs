@@ -1,0 +1,84 @@
+<%- include('../partials/head') %>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-slate-200 min-h-screen">
+  <%- include('../partials/nav') %>
+  <main class="container mx-auto mt-16 max-w-lg">
+    <div class="bg-white rounded-2xl shadow-xl p-8 mt-6 hover:shadow-2xl transition-shadow">
+      <% if (home) { %>
+        <% if (home.imageUrl) { %>
+          <img src="<%= home.imageUrl %>" alt="<%= home.title %>" class="w-full h-56 object-cover rounded-xl mb-6 shadow" />
+        <% } %>
+        <h2 class="text-4xl font-bold text-red-500 mb-8 text-center tracking-wide">
+          Book <%= home.title %>
+        </h2>
+        <form action="/store/book" method="POST" class="space-y-5">
+          <input type="hidden" name="homeId" value="<%= home._id %>">
+          <!-- ...existing form fields... -->
+          <div>
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="dateFrom">Date From</label>
+            <input type="date" id="dateFrom" name="dateFrom" required class="shadow border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-300">
+          </div>
+          <div>
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="dateTo">Date To</label>
+            <input type="date" id="dateTo" name="dateTo" required class="shadow border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-300">
+          </div>
+          <div>
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="fullName">Full Name</label>
+            <input type="text" id="fullName" name="fullName" required class="shadow border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-300">
+          </div>
+          <div>
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="email">Email</label>
+            <input type="email" id="email" name="email" required class="shadow border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-300">
+          </div>
+          <div>
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="phone">Phone Number</label>
+            <input type="tel" id="phone" name="phone" required class="shadow border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-300">
+          </div>
+          <div>
+            <label class="block text-gray-700 text-sm font-bold mb-2">Nationality</label>
+            <select id="nationality" name="nationality" required class="shadow border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-300" onchange="toggleIdField()">
+              <option value="">Select</option>
+              <option value="pakistani">Pakistani</option>
+              <option value="foreigner">Foreigner</option>
+            </select>
+          </div>
+          <div id="cnicField" style="display:none;">
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="cnic">CNIC Number</label>
+            <input type="text" id="cnic" name="cnic" pattern="[0-9]{5}-[0-9]{7}-[0-9]{1}" placeholder="12345-1234567-1" class="shadow border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-300">
+          </div>
+          <div id="passportField" style="display:none;">
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="passport">Passport Number</label>
+            <input type="text" id="passport" name="passport" class="shadow border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-300">
+          </div>
+          <div>
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="paymentMethod">Payment Method</label>
+            <select id="paymentMethod" name="paymentMethod" required class="shadow border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-300">
+              <option value="">Select</option>
+              <option value="credit_card">Credit Card</option>
+              <option value="bank_transfer">Bank Transfer</option>
+              <option value="cash">Cash</option>
+            </select>
+          </div>
+          <div class="flex items-center justify-between pt-2">
+            <button type="submit" class="bg-gradient-to-r from-red-500 to-red-400 hover:from-red-600 hover:to-red-500 text-white font-bold py-2 px-4 rounded shadow">
+              Book Now
+            </button>
+          </div>
+        </form>
+      <% } else { %>
+        <h2 class="text-2xl font-bold text-red-400 mb-4 text-center">No home selected for booking.</h2>
+        <div class="text-center">
+          <a href="/homes" class="text-red-500 underline hover:text-red-700">Browse Homes</a>
+        </div>
+      <% } %>
+    </div>
+  </main>
+  <script>
+    function toggleIdField() {
+      const nationality = document.getElementById('nationality').value;
+      document.getElementById('cnicField').style.display = nationality === 'pakistani' ? 'block' : 'none';
+      document.getElementById('passportField').style.display = nationality === 'foreigner' ? 'block' : 'none';
+    }
+  </script>
+</body>
+</html>

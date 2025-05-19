@@ -26,14 +26,102 @@ exports.getHomes = (req, res, next) => {
   });
 };
 
-exports.getBookings = (req, res, next) => {
-  res.render("store/bookings", {
-    pageTitle: "My Bookings",
-    currentPage: "bookings",
-    isLoggedIn: req.isLoggedIn, 
-    user: req.session.user,
-  });
+exports.getBooked = (req, res, next) => {
+  const userId = req.session.user._id;
+  User.findById(userId)
+    .populate("bookings")
+    .then((user) => {
+      res.render("store/booked", {
+        bookedHomes: user.bookings,
+        pageTitle: "My Booked Homes",
+        currentPage: "booked",
+        isLoggedIn: req.isLoggedIn, 
+        user: req.session.user,
+      });
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 };
+
+exports.getBookHome = (req, res, next) => {
+  const homeId = req.params.homeId;
+  Home.findById(homeId)
+    .then(home => {
+      if (!home) {
+        return res.redirect('/homes');
+      }
+      res.render('store/booked', {
+        home: home,
+        pageTitle: 'Book Home',
+        currentPage: 'book',  // yeh line zaroori hai
+        isLoggedIn: req.isLoggedIn,
+        user: req.session.user
+      });
+    })
+    .catch(err => {
+      console.error(err);
+      res.redirect('/homes');
+    });
+};
+
+
+exports.postBookHome = async (req, res, next) => {
+  const { homeId, bookingDate, fullName, email, phone, nationality, cnic, passport, paymentMethod } = req.body;
+  const userId = req.session.user._id;
+
+  try {
+    const user = await User.findById(userId);
+
+    // Avoid duplicate booking
+    if (!user.bookings.includes(homeId)) {
+      user.bookings.push(homeId);
+      await user.save();
+    }
+
+    // Optionally store full booking info in Booking model here
+
+    res.redirect("/bookings"); // Or show confirmation page
+  } catch (err) {
+    console.log("Booking Error:", err);
+    res.redirect("/homes");
+  }
+};
+
+
+exports.getBookings = async (req, res, next) => {
+  try {
+    const userId = req.session.user._id;
+    const user = await User.findById(userId).populate("bookings");
+    res.render("store/bookings", {
+      bookedHomes: user.bookings,
+      pageTitle: "My Bookings",
+      currentPage: "bookings",
+      isLoggedIn: req.isLoggedIn,
+      user: req.session.user,
+    });
+  } catch (err) {
+    console.log("Error loading bookings:", err);
+    res.redirect("/");
+  }
+};
+
+exports.postCancelBooking = async (req, res, next) => {
+  const homeId = req.params.homeId;
+  const userId = req.session.user._id;
+
+  try {
+    const user = await User.findById(userId);
+    user.bookings = user.bookings.filter(id => id.toString() !== homeId);
+    await user.save();
+
+    res.redirect("/bookings");
+  } catch (err) {
+    console.log("Cancel Booking Error:", err);
+    res.redirect("/bookings");
+  }
+};
+
 
 exports.getFavouriteList = async (req, res, next) => {
   const userId = req.session.user._id;
