@@ -1,5 +1,6 @@
 const Home = require("../models/home");
 const User = require("../models/user");
+const Booking = require("../models/booking");
 
 exports.getIndex = (req, res, next) => {
   console.log("Session Value: ", req.session);
@@ -8,7 +9,7 @@ exports.getIndex = (req, res, next) => {
       registeredHomes: registeredHomes,
       pageTitle: "airbnb Home",
       currentPage: "index",
-      isLoggedIn: req.isLoggedIn, 
+      isLoggedIn: req.isLoggedIn,
       user: req.session.user,
     });
   });
@@ -20,75 +21,34 @@ exports.getHomes = (req, res, next) => {
       registeredHomes: registeredHomes,
       pageTitle: "Homes List",
       currentPage: "Home",
-      isLoggedIn: req.isLoggedIn, 
+      isLoggedIn: req.isLoggedIn,
       user: req.session.user,
     });
   });
 };
 
-exports.getBooked = (req, res, next) => {
-  const userId = req.session.user._id;
-  User.findById(userId)
-    .populate("bookings")
-    .then((user) => {
-      res.render("store/booked", {
-        bookedHomes: user.bookings,
-        pageTitle: "My Booked Homes",
-        currentPage: "booked",
-        isLoggedIn: req.isLoggedIn, 
+exports.getBookHome = (req, res, next) => {
+  const homeId = req.params.homeId;
+  Home.findById(homeId)
+    .then((home) => {
+      if (!home) {
+        return res.redirect("/homes");
+      }
+      res.render("store/book-home", {
+        home: home,
+        pageTitle: "Book Home",
+        currentPage: "book",
+        isLoggedIn: req.isLoggedIn,
         user: req.session.user,
       });
     })
     .catch((err) => {
-      console.log(err);
-    });
-};
-
-exports.getBookHome = (req, res, next) => {
-  const homeId = req.params.homeId;
-  Home.findById(homeId)
-    .then(home => {
-      if (!home) {
-        return res.redirect('/homes');
-      }
-      res.render('store/booked', {
-        home: home,
-        pageTitle: 'Book Home',
-        currentPage: 'book',  // yeh line zaroori hai
-        isLoggedIn: req.isLoggedIn,
-        user: req.session.user
-      });
-    })
-    .catch(err => {
       console.error(err);
-      res.redirect('/homes');
+      res.redirect("/homes");
     });
 };
 
-
-exports.postBookHome = async (req, res, next) => {
-  const { homeId, bookingDate, fullName, email, phone, nationality, cnic, passport, paymentMethod } = req.body;
-  const userId = req.session.user._id;
-
-  try {
-    const user = await User.findById(userId);
-
-    // Avoid duplicate booking
-    if (!user.bookings.includes(homeId)) {
-      user.bookings.push(homeId);
-      await user.save();
-    }
-
-    // Optionally store full booking info in Booking model here
-
-    res.redirect("/bookings"); // Or show confirmation page
-  } catch (err) {
-    console.log("Booking Error:", err);
-    res.redirect("/homes");
-  }
-};
-
-
+// List all bookings for the current user
 exports.getBookings = async (req, res, next) => {
   try {
     const userId = req.session.user._id;
@@ -106,14 +66,62 @@ exports.getBookings = async (req, res, next) => {
   }
 };
 
+exports.postBookHome = async (req, res, next) => {
+  const {
+    homeId,
+    dateFrom,
+    dateTo,
+    fullName,
+    email,
+    phone,
+    nationality,
+    cnic,
+    passport,
+    paymentMethod,
+  } = req.body;
+
+  try {
+    const newBooking = new Booking({
+      home: homeId,
+      user: req.session.user._id,
+      dateFrom,
+      dateTo,
+      fullName,
+      email,
+      phone,
+      nationality,
+      cnic,
+      passport,
+      paymentMethod,
+    });
+
+    await newBooking.save();
+
+    // Save booking reference to user
+    const user = await User.findById(req.session.user._id);
+    user.bookings.push(newBooking._id);
+    await user.save();
+
+    res.redirect("/bookings");
+  } catch (err) {
+    console.error("Booking Error:", err);
+    res.redirect("/homes");
+  }
+};
+
 exports.postCancelBooking = async (req, res, next) => {
-  const homeId = req.params.homeId;
+  const bookingId = req.params.bookingId;
   const userId = req.session.user._id;
 
   try {
     const user = await User.findById(userId);
-    user.bookings = user.bookings.filter(id => id.toString() !== homeId);
+    user.bookings = user.bookings.filter(
+      (id) => id.toString() !== bookingId.toString()
+    );
     await user.save();
+
+    // Optionally, delete booking from DB as well
+    await Booking.findByIdAndDelete(bookingId);
 
     res.redirect("/bookings");
   } catch (err) {
@@ -122,15 +130,14 @@ exports.postCancelBooking = async (req, res, next) => {
   }
 };
 
-
 exports.getFavouriteList = async (req, res, next) => {
   const userId = req.session.user._id;
-  const user = await User.findById(userId).populate('favourites');
+  const user = await User.findById(userId).populate("favourites");
   res.render("store/favourite-list", {
     favouriteHomes: user.favourites,
     pageTitle: "My Favourites",
     currentPage: "favourites",
-    isLoggedIn: req.isLoggedIn, 
+    isLoggedIn: req.isLoggedIn,
     user: req.session.user,
   });
 };
@@ -151,7 +158,7 @@ exports.postRemoveFromFavourite = async (req, res, next) => {
   const userId = req.session.user._id;
   const user = await User.findById(userId);
   if (user.favourites.includes(homeId)) {
-    user.favourites = user.favourites.filter(fav => fav != homeId);
+    user.favourites = user.favourites.filter((fav) => fav != homeId);
     await user.save();
   }
   res.redirect("/favourites");
@@ -168,7 +175,7 @@ exports.getHomeDetails = (req, res, next) => {
         home: home,
         pageTitle: "Home Detail",
         currentPage: "Home",
-        isLoggedIn: req.isLoggedIn, 
+        isLoggedIn: req.isLoggedIn,
         user: req.session.user,
       });
     }
