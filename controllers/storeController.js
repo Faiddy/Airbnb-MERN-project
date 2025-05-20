@@ -51,20 +51,26 @@ exports.getBookHome = (req, res, next) => {
 // List all bookings for the current user
 exports.getBookings = async (req, res, next) => {
   try {
-    const userId = req.session.user._id;
-    const user = await User.findById(userId).populate("bookings");
-    res.render("store/bookings", {
-      bookedHomes: user.bookings,
-      pageTitle: "My Bookings",
-      currentPage: "bookings",
+    const user = await User
+      .findById(req.session.user._id)
+      .populate({
+        path: 'bookings',
+        populate: { path: 'home' }
+      });
+
+    res.render('store/bookings', {
+      bookedHomes: user.bookings,   // now an array of Booking docs
+      pageTitle: 'My Bookings',
+      currentPage: 'bookings',
       isLoggedIn: req.isLoggedIn,
-      user: req.session.user,
+      user: req.session.user
     });
   } catch (err) {
-    console.log("Error loading bookings:", err);
-    res.redirect("/");
+    console.error(err);
+    res.redirect('/');
   }
 };
+
 
 exports.postBookHome = async (req, res, next) => {
   const {

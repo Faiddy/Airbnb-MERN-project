@@ -2,26 +2,28 @@
 </head>
 <body>
   <%- include('../partials/nav') %>
-  <main class="container mx-auto mt-20 max-w-4xl">
-    <h2 class="text-3xl font-bold text-center mb-8 text-green-700">My Bookings</h2>
 
-    <% if (bookedHomes.length > 0) { %>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <% bookedHomes.forEach(home => { %>
-          <div class="bg-white shadow-md rounded-lg p-4">
-            <h3 class="text-xl font-semibold text-red-600 mb-2"><%= home.title %></h3>
-            <p class="text-gray-600"><%= home.description %></p>
-            <p class="text-sm text-gray-400 mt-2">Location: <%= home.location %></p>
-            <form action="/bookings/cancel/<%= home._id %>" method="POST" class="mt-4">
-              <button class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
-                Cancel Booking
-              </button>
+  <main class="container mx-auto mt-16">
+    <h1 class="text-2xl font-bold text-center mb-6">My Bookings</h1>
+
+    <% if (bookedHomes.length) { %>
+      <div class="space-y-4">
+        <% bookedHomes.forEach(booking => { %>
+          <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-xl font-semibold mb-2"><%= booking.home.houseName %></h2>
+            <p><strong>From:</strong> <%= booking.dateFrom.toDateString() %></p>
+            <p><strong>To:</strong>   <%= booking.dateTo.toDateString() %></p>
+            <p><strong>Guests:</strong> <%= booking.fullName %></p>
+            <form action="/bookings/cancel/<%= booking._id %>" method="POST" class="mt-2">
+              <button type="submit" class="text-red-500 underline">Cancel Booking</button>
             </form>
           </div>
-        <% }); %>
+        <% }) %>
       </div>
     <% } else { %>
+      <div class="flex items-center justify-center h-64">
       <p class="text-center text-gray-500">You have no bookings yet.</p>
+      </div>
     <% } %>
   </main>
 </body>

@@ -48,7 +48,7 @@ exports.getHostHomes = (req, res, next) => {
 
 exports.postAddHome = (req, res, next) => {
   const { houseName, price, location, rating, description } = req.body;
-  const photo = req.file.path;
+  const photo = '/uploads/' + req.file.filename;
   const home = new Home({houseName, price, location, rating,photo, description});
   home.save().then(() => {
     console.log('Home Saved successfully');
@@ -71,7 +71,7 @@ exports.postEditHome = (req, res, next) => {
           console.log('Error while deleting old photo', err);
         } 
       })
-      home.photo = req.file.path;
+      home.photo = '/uploads/' + req.file.filename;
     }
 
     home.save().then(result => {
