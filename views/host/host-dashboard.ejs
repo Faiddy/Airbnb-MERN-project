@@ -37,7 +37,8 @@
                 <th class="py-2 px-4 border-b">Home</th>
                 <th class="py-2 px-4 border-b">Date</th>
                 <th class="py-2 px-4 border-b">Amount</th>
-                <th class="py-2 px-4 border-b">Payment Method</th> <!-- ✅ Added -->
+                <th class="py-2 px-4 border-b">Payment Method</th>
+                <th class="py-2 px-4 border-b">Contact</th> 
               </tr>
             </thead>
             <tbody>
@@ -47,7 +48,8 @@
                   <td class="py-2 px-4 border-b"><%= booking.houseName %></td>
                   <td class="py-2 px-4 border-b"><%= booking.date %></td>
                   <td class="py-2 px-4 border-b">Rs<%= booking.amount %></td>
-                  <td class="py-2 px-4 border-b"><%= booking.paymentMethod %></td> <!-- ✅ Added -->
+                  <td class="py-2 px-4 border-b"><%= booking.paymentMethod %></td>
+                  <td class="py-2 px-4 border-b"><%= booking.phone %></td> 
                 </tr>
               <% }) %>
             </tbody>

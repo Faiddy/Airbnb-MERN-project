@@ -1,6 +1,6 @@
 const Home = require("../models/home");
 const User = require("../models/user");
-const Booking = require("../models/booking");
+const Booking = require("../models/Booking");
 
 exports.getIndex = (req, res, next) => {
   console.log("Session Value: ", req.session);
@@ -79,12 +79,17 @@ exports.postBookHome = async (req, res, next) => {
     dateTo,
     fullName,
     email,
-    phone,
+    phone: countryCode,
+    phoneNumber,
     nationality,
     cnic,
     passport,
     paymentMethod,
   } = req.body;
+
+  // Combine phone
+  const cleanedNumber = phoneNumber.replace(/\D/g, '');
+  const fullPhone = countryCode + cleanedNumber;
 
   try {
     const newBooking = new Booking({
@@ -94,7 +99,7 @@ exports.postBookHome = async (req, res, next) => {
       dateTo,
       fullName,
       email,
-      phone,
+      phone: fullPhone, // Use combined phone
       nationality,
       cnic,
       passport,
@@ -103,7 +108,7 @@ exports.postBookHome = async (req, res, next) => {
 
     await newBooking.save();
 
-    // Save booking reference to user
+    // Link booking to user
     const user = await User.findById(req.session.user._id);
     user.bookings.push(newBooking._id);
     await user.save();
@@ -114,6 +119,7 @@ exports.postBookHome = async (req, res, next) => {
     res.redirect("/homes");
   }
 };
+
 
 exports.postCancelBooking = async (req, res, next) => {
   const bookingId = req.params.bookingId;

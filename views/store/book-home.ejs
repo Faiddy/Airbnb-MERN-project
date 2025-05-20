@@ -56,17 +56,16 @@
           <option value="Canada">🇨🇦 Canada</option>
           <option value="Australia">🇦🇺 Australia</option>
           <option value="India">🇮🇳 India</option>
-          <!-- Add more countries here -->
         </select>
 
-        <div id="cnicContainer" style="display:none;">
+        <div id="cnicContainer" class="hidden">
           <label class="block font-semibold">CNIC</label>
-          <input type="text" name="cnic" class="w-full border rounded px-3 py-2" />
+          <input type="text" name="cnic" id="cnic" class="w-full border rounded px-3 py-2" placeholder="12345-1234567-1" />
         </div>
 
-        <div id="passportContainer" style="display:none;">
+        <div id="passportContainer" class="hidden">
           <label class="block font-semibold">Passport Number</label>
-          <input type="text" name="passport" class="w-full border rounded px-3 py-2" />
+          <input type="text" name="passport" id="passport" class="w-full border rounded px-3 py-2" placeholder="Enter passport number" />
         </div>
 
         <label class="block font-semibold">Payment Method</label>
@@ -87,209 +86,96 @@
     <% } %>
   </main>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/intlTelInput.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/utils.js"></script>
-  <style>
-    .iti {
-      width: 100%;
-      display: block;
-    }
-    .iti__flag-container {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      padding: 1px;
-      background-color: #fff;
-      border: 1px solid #ccc;
-      border-radius: 4px 0 0 4px;
-    }
-    .iti__selected-flag {
-      padding: 0 6px 0 8px;
-      display: flex;
-      align-items: center;
-      cursor: pointer;
-    }
-    .iti__country-list {
-      position: absolute;
-      z-index: 1000;
-      list-style: none;
-      text-align: left;
-      padding: 0;
-      margin: 0;
-      background-color: white;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-      max-height: 200px;
-      overflow-y: scroll;
-      width: 300px;
-      top: 100%;
-      left: 0;
-    }
-    .iti__country {
-      padding: 5px 10px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      white-space: nowrap;
-    }
-    .iti__country:hover {
-      background-color: #f5f5f5;
-    }
-    .iti__flag {
-      margin-right: 6px;
-    }
-    .iti__dial-code {
-      color: #999;
-      margin-left: 6px;
-    }
-    #phone {
-      width: 100%;
-      height: 100%;
-    }
-  </style>
   <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      const phoneSelect = document.querySelector("#phone");
-      const phoneNumber = document.querySelector("#phoneNumber");
-      const phoneFormat = document.querySelector("#phoneFormat");
+    document.addEventListener("DOMContentLoaded", function () {
+      const phoneSelect = document.getElementById("phone");
+      const phoneNumber = document.getElementById("phoneNumber");
+      const phoneFormat = document.getElementById("phoneFormat");
+      const nationalitySelect = document.getElementById("nationality");
+      const cnicContainer = document.getElementById("cnicContainer");
+      const passportContainer = document.getElementById("passportContainer");
+      const cnicInput = document.getElementById("cnic");
+      const passportInput = document.getElementById("passport");
 
-      // Phone number formats for different countries
       const phoneFormats = {
-        "+92": { // Pakistan
-          pattern: /^[0-9]{10}$/,
-          format: "3XX-XXXXXXX",
-          example: "3001234567",
-          message: "Enter 10 digits (e.g., 3001234567)"
-        },
-        "+1": { // US/Canada
-          pattern: /^[0-9]{10}$/,
-          format: "(XXX) XXX-XXXX",
-          example: "1234567890",
-          message: "Enter 10 digits (e.g., 1234567890)"
-        },
-        "+44": { // UK
-          pattern: /^[0-9]{10,11}$/,
-          format: "XXXX XXXXXX",
-          example: "7123456789",
-          message: "Enter 10-11 digits (e.g., 7123456789)"
-        },
-        "+61": { // Australia
-          pattern: /^[0-9]{9}$/,
-          format: "X XXX XXX XXX",
-          example: "412345678",
-          message: "Enter 9 digits (e.g., 412345678)"
-        },
-        "+91": { // India
-          pattern: /^[0-9]{10}$/,
-          format: "XXXXX XXXXX",
-          example: "9876543210",
-          message: "Enter 10 digits (e.g., 9876543210)"
-        }
+        "+92": { pattern: /^[0-9]{10}$/, example: "3001234567", message: "Enter 10 digits (e.g., 3001234567)" },
+        "+1": { pattern: /^[0-9]{10}$/, example: "1234567890", message: "Enter 10 digits (e.g., 1234567890)" },
+        "+44": { pattern: /^[0-9]{10,11}$/, example: "7123456789", message: "Enter 10-11 digits (e.g., 7123456789)" },
+        "+61": { pattern: /^[0-9]{9}$/, example: "412345678", message: "Enter 9 digits (e.g., 412345678)" },
+        "+91": { pattern: /^[0-9]{10}$/, example: "9876543210", message: "Enter 10 digits (e.g., 9876543210)" }
       };
 
-      // Update format message when country changes
-      phoneSelect.addEventListener('change', function() {
-        const countryCode = this.value;
-        if (phoneFormats[countryCode]) {
-          phoneFormat.textContent = phoneFormats[countryCode].message;
-          phoneNumber.placeholder = `Example: ${phoneFormats[countryCode].example}`;
+      phoneSelect.addEventListener('change', function () {
+        const code = this.value;
+        if (phoneFormats[code]) {
+          phoneFormat.textContent = phoneFormats[code].message;
+          phoneNumber.placeholder = `Example: ${phoneFormats[code].example}`;
         } else {
           phoneFormat.textContent = "Please select a country code";
           phoneNumber.placeholder = "Enter phone number";
         }
-        phoneNumber.value = ''; // Clear the input when country changes
+        phoneNumber.value = '';
       });
 
-      // Format phone number as user types
-      phoneNumber.addEventListener('input', function(e) {
-        let value = e.target.value.replace(/\D/g, '');
-        const countryCode = phoneSelect.value;
-        
-        if (phoneFormats[countryCode]) {
-          const format = phoneFormats[countryCode];
-          
-          // Apply formatting based on country
-          if (countryCode === "+92") { // Pakistan
-            if (value.length > 3) {
-              value = value.slice(0, 3) + "-" + value.slice(3);
-            }
-          } else if (countryCode === "+1") { // US/Canada
-            if (value.length > 6) {
-              value = `(${value.slice(0, 3)}) ${value.slice(3, 6)}-${value.slice(6, 10)}`;
-            } else if (value.length > 3) {
-              value = `(${value.slice(0, 3)}) ${value.slice(3)}`;
-            }
-          } else if (countryCode === "+44") { // UK
-            if (value.length > 4) {
-              value = value.slice(0, 4) + " " + value.slice(4);
-            }
-          } else if (countryCode === "+61") { // Australia
-            if (value.length > 1) {
-              value = value.slice(0, 1) + " " + value.slice(1);
-            }
-            if (value.length > 5) {
-              value = value.slice(0, 5) + " " + value.slice(5);
-            }
-          } else if (countryCode === "+91") { // India
-            if (value.length > 5) {
-              value = value.slice(0, 5) + " " + value.slice(5);
-            }
-          }
+      nationalitySelect.addEventListener("change", () => {
+        const selected = nationalitySelect.value.trim();
+        if (selected === "Pakistan") {
+          cnicContainer.classList.remove("hidden");
+          passportContainer.classList.add("hidden");
+        } else if (selected !== "") {
+          cnicContainer.classList.add("hidden");
+          passportContainer.classList.remove("hidden");
+        } else {
+          cnicContainer.classList.add("hidden");
+          passportContainer.classList.add("hidden");
         }
-        
-        e.target.value = value;
       });
 
-      // Validate phone number before form submission
-      const form = document.querySelector('#bookingForm');
+      const form = document.getElementById("bookingForm");
       if (form) {
-        form.addEventListener('submit', function(e) {
+        form.addEventListener("submit", function (e) {
           e.preventDefault();
+
           const countryCode = phoneSelect.value;
           const number = phoneNumber.value.replace(/\D/g, '');
-          
-          if (!countryCode) {
-            alert('Please select a country code');
+          const nationality = nationalitySelect.value;
+          const cnic = cnicInput.value.trim();
+          const passport = passportInput.value.trim();
+
+          // Phone validation
+          if (!countryCode || !phoneFormats[countryCode].pattern.test(number)) {
+            alert(`Please enter a valid phone number.\n${phoneFormats[countryCode]?.message || ""}`);
             return;
           }
 
-          if (!phoneFormats[countryCode].pattern.test(number)) {
-            alert(`Please enter a valid phone number for the selected country.\n${phoneFormats[countryCode].message}`);
-            return;
+          // CNIC validation
+          if (nationality === "Pakistan") {
+            const cnicPattern = /^[0-9]{5}-[0-9]{7}-[0-9]{1}$/;
+            if (!cnicPattern.test(cnic)) {
+              alert("Please enter a valid CNIC in the format: 12345-1234567-1");
+              return;
+            }
           }
 
-          const fullNumber = countryCode + number;
+          // Passport validation
+          if (nationality !== "Pakistan") {
+            const passportPattern = /^[A-Za-z0-9]{6,}$/;
+            if (!passportPattern.test(passport)) {
+              alert("Please enter a valid Passport Number (at least 6 alphanumeric characters)");
+              return;
+            }
+          }
+
+          const fullPhone = countryCode + number;
           const hiddenInput = document.createElement('input');
           hiddenInput.type = 'hidden';
           hiddenInput.name = 'fullPhone';
-          hiddenInput.value = fullNumber;
+          hiddenInput.value = fullPhone;
           form.appendChild(hiddenInput);
+
           form.submit();
         });
       }
-
-      // Show/hide CNIC and Passport fields based on nationality selection
-      const nationalitySelect = document.getElementById("nationality");
-      const cnicContainer = document.getElementById("cnicContainer");
-      const passportContainer = document.getElementById("passportContainer");
-
-      function updateIdFields() {
-        const val = nationalitySelect.value.toLowerCase();
-        if(val === "pakistan") {
-          cnicContainer.style.display = "block";
-          passportContainer.style.display = "none";
-        } else if(val) {
-          cnicContainer.style.display = "none";
-          passportContainer.style.display = "block";
-        } else {
-          cnicContainer.style.display = "none";
-          passportContainer.style.display = "none";
-        }
-      }
-
-      nationalitySelect.addEventListener("change", updateIdFields);
-      updateIdFields();
     });
   </script>
 </body>

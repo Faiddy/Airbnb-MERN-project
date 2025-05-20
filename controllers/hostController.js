@@ -31,7 +31,8 @@ exports.getHostDashboard = async (req, res) => {
         houseName: b.home.houseName,
         date: `${b.dateFrom.toDateString()} to ${b.dateTo.toDateString()}`,
         amount: b.home.price,
-        paymentMethod: b.paymentMethod
+        paymentMethod: b.paymentMethod,
+        phone:b.phone
       }));
 
     // Get host's payment method if stored in User model
