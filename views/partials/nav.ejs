@@ -3,15 +3,16 @@
     
     <!-- Left Side: Logo + Nav Links (if logged in) -->
     <div class="flex items-center space-x-6">
-      <!-- Logo -->
-      <a href="/" class="text-2xl font-bold bg-red-400 px-3 py-1 rounded hover:bg-red-600 transition">
-        airbnb
-      </a>
+      
 
       <% if (isLoggedIn) { %>
         <% if (user && user.userType === 'guest') { %>
         <!-- Navigation Links for Guest -->
         <!-- Navigation Links -->
+         <!-- Logo -->
+      <a href="/" class="text-2xl font-bold bg-red-400 px-3 py-1 rounded hover:bg-red-600 transition">
+        airbnb
+      </a>
         <a href="/homes" class="<%= currentPage === 'Home' ? 'bg-red-400' : 'hover:bg-red-600' %> px-3 py-2 rounded transition">
           Homes
         </a>
@@ -23,6 +24,9 @@
         </a>
         <% } else { %>
         <!-- Navigation Links for Host -->
+         <a href="/host/host-dashboard" class="<%= currentPage === 'host-homes' ? 'bg-red-400' : 'hover:bg-red-600' %> px-3 py-2 rounded transition">
+          Dashboard
+        </a>
         <a href="/host/host-home-list" class="<%= currentPage === 'host-homes' ? 'bg-red-400' : 'hover:bg-red-600' %> px-3 py-2 rounded transition">
           Host Homes
         </a>

@@ -1,6 +1,59 @@
 const home = require("../models/home");
 const Home = require("../models/home");
 const fs = require("fs");
+const Booking = require('../models/Booking');
+const User = require('../models/user');
+
+exports.getHostDashboard = async (req, res) => {
+  try {
+    const hostId = req.session.userId;
+
+    // Get all bookings with their related home and user (guest)
+    const bookings = await Booking.find()
+      .populate({
+        path: 'home',
+        match: { host: hostId }, // only homes posted by this host
+      })
+      .populate('user'); // guest
+
+    // Filter out bookings where the home didn't match the host
+    const filteredBookings = bookings.filter(b => b.home !== null);
+
+    const totalBookings = filteredBookings.length;
+    const totalEarnings = filteredBookings.reduce((sum, b) => {
+      return sum + (b.home.price || 0);
+    }, 0);
+
+    const upcomingBookings = filteredBookings
+      .filter(b => new Date(b.dateFrom) >= new Date())
+      .map(b => ({
+        guestName: b.fullName,
+        houseName: b.home.houseName,
+        date: `${b.dateFrom.toDateString()} to ${b.dateTo.toDateString()}`,
+        amount: b.home.price,
+        paymentMethod: b.paymentMethod
+      }));
+
+    // Get host's payment method if stored in User model
+    const host = await User.findById(hostId);
+
+    res.render('host/host-dashboard', {
+      totalBookings,
+      totalEarnings,
+      upcomingBookings,
+      pageTitle: 'Host Dashboard',
+      currentPage: 'host-dashboard',
+      isLoggedIn: req.isLoggedIn,
+      user: req.session.user,
+    });
+
+  } catch (err) {
+    console.error('Error loading host dashboard:', err);
+    res.status(500).send('Server Error');
+  }
+};
+
+
 
 exports.getAddHome = (req, res, next) => {
   res.render("host/edit-home", {
