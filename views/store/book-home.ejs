@@ -1,91 +1,218 @@
 <%- include('../partials/head') %>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/css/intlTelInput.min.css" />
+<style>
+  .booking-container {
+    background: linear-gradient(to bottom right, #fff5f5, #fff);
+    min-height: 100vh;
+    padding: 2rem 0;
+  }
+  .booking-card {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transition: transform 0.2s;
+  }
+  .booking-card:hover {
+    transform: translateY(-2px);
+  }
+  .home-image {
+    width: 100%;
+    height: 300px;
+    object-fit: contain;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    background-color: #f8f9fa;
+    padding: 1rem;
+  }
+  .home-image-container {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    padding: 1rem;
+  }
+  .form-input {
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    width: 100%;
+    transition: all 0.2s;
+  }
+  .form-input:focus {
+    border-color: #f56565;
+    box-shadow: 0 0 0 3px rgba(245, 101, 101, 0.1);
+    outline: none;
+  }
+  .form-label {
+    color: #4a5568;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+  .submit-button {
+    background: linear-gradient(to right, #f56565, #e53e3e);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+  .submit-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(245, 101, 101, 0.2);
+  }
+  .price-tag {
+    background: #f56565;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    font-weight: 600;
+    display: inline-block;
+  }
+  .section-divider {
+    border-top: 1px solid #e2e8f0;
+    margin: 1.5rem 0;
+  }
+  .availability-message {
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    margin-top: 0.5rem;
+    font-weight: 500;
+  }
+  .availability-message.success {
+    background-color: #c6f6d5;
+    color: #2f855a;
+  }
+  .availability-message.error {
+    background-color: #fed7d7;
+    color: #c53030;
+  }
+</style>
 </head>
-<body>
+<body class="bg-gray-50">
   <%- include('../partials/nav') %>
 
-  <main class="container mx-auto max-w-lg mt-16 bg-white rounded-2xl shadow-xl p-8">
-    <h1 class="text-3xl font-bold mb-6 text-center text-red-600">Book This Home</h1>
+  <div class="booking-container">
+    <main class="container mx-auto max-w-2xl px-4">
+      <div class="booking-card p-8">
+        <h1 class="text-3xl font-bold mb-6 text-center text-red-600">Book This Home</h1>
 
-    <% if (home) { %>
-      <div class="mb-6 text-center">
-        <% if (home.photo) { %>
-          <img src="<%= home.photo %>" alt="<%= home.houseName %>" style="width: 20%; height: auto;" class="object-cover rounded-xl shadow mx-auto" />
+        <% if (home) { %>
+          <div class="mb-8 text-center">
+            <% if (home.photo) { %>
+              <div class="home-image-container">
+                <img src="<%= home.photo %>" alt="<%= home.houseName %>" class="home-image" />
+              </div>
+            <% } %>
+            <h2 class="text-2xl font-semibold mt-4 mb-2"><%= home.houseName %></h2>
+            <p class="text-gray-700 mb-2">
+              <i class="fas fa-map-marker-alt text-red-500 mr-2"></i>
+              <%= home.location %>
+            </p>
+            <p class="text-gray-700 mb-4">
+              <span class="price-tag">
+                <i class="fas fa-tag mr-2"></i>
+                Rs <%= home.price %> per night
+              </span>
+            </p>
+          </div>
+
+          <form action="/store/book" method="POST" class="space-y-6" id="bookingForm">
+            <input type="hidden" name="homeId" value="<%= home._id %>" />
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="form-label">From Date</label>
+                <input type="date" name="dateFrom" required class="form-input" />
+              </div>
+              <div>
+                <label class="form-label">To Date</label>
+                <input type="date" name="dateTo" required class="form-input" />
+              </div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="form-label">Full Name</label>
+                <input type="text" name="fullName" required class="form-input" placeholder="Enter your full name" />
+              </div>
+              <div>
+                <label class="form-label">Email</label>
+                <input type="email" name="email" required class="form-input" placeholder="Enter your email" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="form-label">Phone</label>
+                <select id="phone" name="phone" required class="form-input">
+                  <option value="">Select Country Code</option>
+                  <option value="+92">🇵🇰 Pakistan (+92)</option>
+                  <option value="+1">🇺🇸 United States (+1)</option>
+                  <option value="+44">🇬🇧 United Kingdom (+44)</option>
+                  <option value="+1">🇨🇦 Canada (+1)</option>
+                  <option value="+61">🇦🇺 Australia (+61)</option>
+                  <option value="+91">🇮🇳 India (+91)</option>
+                </select>
+                <input type="tel" id="phoneNumber" name="phoneNumber" required class="form-input mt-2" placeholder="Enter phone number" />
+                <small id="phoneFormat" class="text-gray-500 mt-1 block"></small>
+              </div>
+              <div>
+                <label class="form-label">Nationality</label>
+                <select id="nationality" name="nationality" required class="form-input">
+                  <option value="">Select Nationality</option>
+                  <option value="Pakistan">🇵🇰 Pakistan</option>
+                  <option value="United States">🇺🇸 United States</option>
+                  <option value="United Kingdom">🇬🇧 United Kingdom</option>
+                  <option value="Canada">🇨🇦 Canada</option>
+                  <option value="Australia">🇦🇺 Australia</option>
+                  <option value="India">🇮🇳 India</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="cnicContainer" class="hidden">
+              <label class="form-label">CNIC</label>
+              <input type="text" name="cnic" id="cnic" class="form-input" placeholder="12345-1234567-1" />
+            </div>
+
+            <div id="passportContainer" class="hidden">
+              <label class="form-label">Passport Number</label>
+              <input type="text" name="passport" id="passport" class="form-input" placeholder="Enter passport number" />
+            </div>
+
+            <div class="section-divider"></div>
+
+            <div>
+              <label class="form-label">Payment Method</label>
+              <select name="paymentMethod" required class="form-input">
+                <option value="">Select Payment Method</option>
+                <option value="Credit Card">💳 Credit Card</option>
+                <option value="Debit Card">💳 Debit Card</option>
+                <option value="Cash">💵 Cash</option>
+                <option value="Bank Transfer">🏦 Bank Transfer</option>
+              </select>
+            </div>
+
+            <button type="submit" class="submit-button w-full">
+              <i class="fas fa-check-circle mr-2"></i>
+              Confirm Booking
+            </button>
+          </form>
+        <% } else { %>
+          <div class="text-center py-8">
+            <i class="fas fa-exclamation-circle text-4xl text-gray-400 mb-4"></i>
+            <p class="text-gray-500">Home details not found.</p>
+          </div>
         <% } %>
-        <h2 class="text-2xl font-semibold mt-4 mb-2"><%= home.houseName %></h2>
-        <p class="text-gray-700 mb-2"><strong>Location:</strong> <%= home.location %></p>
-        <p class="text-gray-700 mb-4"><strong>Price per night:</strong> Rs <%= home.price %></p>
       </div>
+    </main>
+  </div>
 
-      <form action="/store/book" method="POST" class="space-y-4" id="bookingForm">
-        <input type="hidden" name="homeId" value="<%= home._id %>" />
-
-        <label class="block font-semibold">From Date</label>
-        <input type="date" name="dateFrom" required class="w-full border rounded px-3 py-2" />
-
-        <label class="block font-semibold">To Date</label>
-        <input type="date" name="dateTo" required class="w-full border rounded px-3 py-2" />
-
-        <label class="block font-semibold">Full Name</label>
-        <input type="text" name="fullName" required class="w-full border rounded px-3 py-2" />
-
-        <label class="block font-semibold">Email</label>
-        <input type="email" name="email" required class="w-full border rounded px-3 py-2" />
-
-        <label class="block font-semibold">Phone</label>
-        <div class="phone-input-container" style="position: relative; width: 100%;">
-          <select id="phone" name="phone" required class="w-full border rounded px-3 py-2">
-            <option value="">Select Country Code</option>
-            <option value="+92">🇵🇰 Pakistan (+92)</option>
-            <option value="+1">🇺🇸 United States (+1)</option>
-            <option value="+44">🇬🇧 United Kingdom (+44)</option>
-            <option value="+1">🇨🇦 Canada (+1)</option>
-            <option value="+61">🇦🇺 Australia (+61)</option>
-            <option value="+91">🇮🇳 India (+91)</option>
-          </select>
-          <input type="tel" id="phoneNumber" name="phoneNumber" required class="w-full border rounded px-3 py-2 mt-2" placeholder="Enter phone number" />
-          <small id="phoneFormat" class="text-gray-500 mt-1 block"></small>
-        </div>
-
-        <label class="block font-semibold">Nationality</label>
-        <select id="nationality" name="nationality" required class="w-full border rounded px-3 py-2">
-          <option value="">Select Nationality</option>
-          <option value="Pakistan">🇵🇰 Pakistan</option>
-          <option value="United States">🇺🇸 United States</option>
-          <option value="United Kingdom">🇬🇧 United Kingdom</option>
-          <option value="Canada">🇨🇦 Canada</option>
-          <option value="Australia">🇦🇺 Australia</option>
-          <option value="India">🇮🇳 India</option>
-        </select>
-
-        <div id="cnicContainer" class="hidden">
-          <label class="block font-semibold">CNIC</label>
-          <input type="text" name="cnic" id="cnic" class="w-full border rounded px-3 py-2" placeholder="12345-1234567-1" />
-        </div>
-
-        <div id="passportContainer" class="hidden">
-          <label class="block font-semibold">Passport Number</label>
-          <input type="text" name="passport" id="passport" class="w-full border rounded px-3 py-2" placeholder="Enter passport number" />
-        </div>
-
-        <label class="block font-semibold">Payment Method</label>
-        <select name="paymentMethod" required class="w-full border rounded px-3 py-2">
-          <option value="">Select Payment Method</option>
-          <option value="Credit Card">Credit Card</option>
-          <option value="Debit Card">Debit Card</option>
-          <option value="Cash">Cash</option>
-          <option value="Bank Transfer">Bank Transfer</option>
-        </select>
-
-        <button type="submit" class="w-full bg-red-500 text-white font-bold py-3 rounded hover:bg-red-600 transition">
-          Confirm Booking
-        </button>
-      </form>
-    <% } else { %>
-      <p class="text-center text-gray-500">Home details not found.</p>
-    <% } %>
-  </main>
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/intlTelInput.min.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       const phoneSelect = document.getElementById("phone");
@@ -220,7 +347,5 @@
       }
     });
   </script>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/intlTelInput.min.js"></script>
 </body>
 </html>
