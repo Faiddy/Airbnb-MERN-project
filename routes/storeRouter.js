@@ -23,6 +23,9 @@ storeRouter.post("/store/book", storeController.postBookHome);
 
 // Cancel booking
 storeRouter.post("/bookings/cancel/:bookingId", storeController.postCancelBooking);
+//check availability
+storeRouter.get('/check-availability', storeController.checkAvailability);
+
 
 // Favourite homes list
 storeRouter.get("/favourites", storeController.getFavouriteList);

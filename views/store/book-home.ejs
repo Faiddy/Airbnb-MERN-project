@@ -132,6 +132,53 @@
       });
 
       const form = document.getElementById("bookingForm");
+      const dateFromInput = form.querySelector('input[name="dateFrom"]');
+      const dateToInput = form.querySelector('input[name="dateTo"]');
+      const bookingButton = form.querySelector('button[type="submit"]');
+      const homeId = "<%= home._id %>";
+
+      // Availability message placeholder
+      const availabilityMessage = document.createElement("div");
+      availabilityMessage.className = "text-center mt-2 font-semibold";
+      dateToInput.parentNode.insertBefore(availabilityMessage, dateToInput.nextSibling);
+
+      async function checkAvailability() {
+        const dateFrom = dateFromInput.value;
+        const dateTo = dateToInput.value;
+
+        if (!dateFrom || !dateTo) {
+          availabilityMessage.textContent = "";
+          bookingButton.disabled = false;
+          return;
+        }
+
+        try {
+          const response = await fetch(`/check-availability?homeId=${homeId}&dateFrom=${dateFrom}&dateTo=${dateTo}`);
+          const data = await response.json();
+
+          if (data.available) {
+            availabilityMessage.textContent = "✅ Home is available for selected dates";
+            availabilityMessage.classList.remove("text-red-600");
+            availabilityMessage.classList.add("text-green-600");
+            bookingButton.disabled = false;
+          } else {
+            availabilityMessage.textContent = "❌ " + data.message;
+            availabilityMessage.classList.remove("text-green-600");
+            availabilityMessage.classList.add("text-red-600");
+            bookingButton.disabled = true;
+          }
+        } catch (error) {
+          console.error("Availability check failed", error);
+          availabilityMessage.textContent = "Error checking availability";
+          availabilityMessage.classList.remove("text-green-600");
+          availabilityMessage.classList.add("text-red-600");
+          bookingButton.disabled = false; // Let user try to submit
+        }
+      }
+
+      dateFromInput.addEventListener("change", checkAvailability);
+      dateToInput.addEventListener("change", checkAvailability);
+
       if (form) {
         form.addEventListener("submit", function (e) {
           e.preventDefault();
@@ -150,33 +197,30 @@
 
           // CNIC validation
           if (nationality === "Pakistan") {
-            const cnicPattern = /^[0-9]{5}-[0-9]{7}-[0-9]{1}$/;
-            if (!cnicPattern.test(cnic)) {
-              alert("Please enter a valid CNIC in the format: 12345-1234567-1");
+            if (!/^\d{5}-\d{7}-\d{1}$/.test(cnic)) {
+              alert("Please enter a valid CNIC number (e.g., 12345-1234567-1)");
+              return;
+            }
+          } else {
+            // Passport validation (simplified, you can improve)
+            if (!passport) {
+              alert("Please enter a valid Passport number");
               return;
             }
           }
 
-          // Passport validation
-          if (nationality !== "Pakistan") {
-            const passportPattern = /^[A-Za-z0-9]{6,}$/;
-            if (!passportPattern.test(passport)) {
-              alert("Please enter a valid Passport Number (at least 6 alphanumeric characters)");
-              return;
-            }
+          // Final check for availability before submit
+          if (bookingButton.disabled) {
+            alert("Selected dates are not available. Please choose different dates.");
+            return;
           }
-
-          const fullPhone = countryCode + number;
-          const hiddenInput = document.createElement('input');
-          hiddenInput.type = 'hidden';
-          hiddenInput.name = 'fullPhone';
-          hiddenInput.value = fullPhone;
-          form.appendChild(hiddenInput);
 
           form.submit();
         });
       }
     });
   </script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/intlTelInput.min.js"></script>
 </body>
 </html>

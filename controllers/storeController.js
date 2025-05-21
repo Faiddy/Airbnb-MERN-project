@@ -1,6 +1,6 @@
 const Home = require("../models/home");
 const User = require("../models/user");
-const Booking = require("../models/Booking");
+const Booking = require("../models/booking");
 
 exports.getIndex = (req, res, next) => {
   console.log("Session Value: ", req.session);
@@ -71,6 +71,33 @@ exports.getBookings = async (req, res, next) => {
   }
 };
 
+// route: GET /check-availability
+exports.checkAvailability = async (req, res, next) => {
+  const { homeId, dateFrom, dateTo } = req.query;
+
+  if (!homeId || !dateFrom || !dateTo) {
+    return res.status(400).json({ available: false, message: 'Missing data' });
+  }
+
+  try {
+    const bookings = await Booking.find({
+      home: homeId,
+      dateFrom: { $lte: new Date(dateTo) },
+      dateTo: { $gte: new Date(dateFrom) }
+    });
+
+    if (bookings.length > 0) {
+      return res.json({ available: false, message: 'Home is already booked for selected dates' });
+    }
+
+    res.json({ available: true });
+  } catch (error) {
+    console.error('Availability check error:', error);
+    res.status(500).json({ available: false, message: 'Server error' });
+  }
+};
+
+
 
 exports.postBookHome = async (req, res, next) => {
   const {
@@ -87,11 +114,35 @@ exports.postBookHome = async (req, res, next) => {
     paymentMethod,
   } = req.body;
 
-  // Combine phone
   const cleanedNumber = phoneNumber.replace(/\D/g, '');
   const fullPhone = countryCode + cleanedNumber;
 
   try {
+    // Check home availability
+    const overlapping = await Booking.find({
+      home: homeId,
+      $or: [
+        {
+          dateFrom: { $lte: new Date(dateTo) },
+          dateTo: { $gte: new Date(dateFrom) },
+        },
+      ],
+    });
+
+    if (overlapping.length > 0) {
+      // If dates overlap, send back to form with error
+      const home = await Home.findById(homeId);
+      return res.render("store/book-home", {
+        home: home,
+        pageTitle: "Book Home",
+        currentPage: "book",
+        isLoggedIn: req.isLoggedIn,
+        user: req.session.user,
+        errorMessage: "This home is not available for selected dates.",
+      });
+    }
+
+    // Save booking
     const newBooking = new Booking({
       home: homeId,
       user: req.session.user._id,
@@ -99,7 +150,7 @@ exports.postBookHome = async (req, res, next) => {
       dateTo,
       fullName,
       email,
-      phone: fullPhone, // Use combined phone
+      phone: fullPhone,
       nationality,
       cnic,
       passport,
@@ -119,6 +170,8 @@ exports.postBookHome = async (req, res, next) => {
     res.redirect("/homes");
   }
 };
+
+
 
 
 exports.postCancelBooking = async (req, res, next) => {
