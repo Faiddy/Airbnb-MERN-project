@@ -45,6 +45,9 @@
             Logout
           </button>
         </form>
+        <a href="/profile" class="<%= currentPage === 'Profile' ? 'bg-red-400' : 'hover:bg-red-600' %> bg-red-400 px-4 py-2 rounded hover:bg-red-600 transition">
+          Profile
+        </a>
       <% } else { %>
         <a href="/signup" class="bg-red-400 px-4 py-2 rounded hover:bg-red-600 transition">
           Sign Up

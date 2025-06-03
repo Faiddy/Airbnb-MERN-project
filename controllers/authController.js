@@ -172,3 +172,34 @@ exports.postLogout = (req, res, next) => {
   })
 }
 
+exports.getProfile = (req, res, next) => {
+  if (!req.session.isLoggedIn) {
+    return res.redirect("/login");
+  }
+  res.render("auth/profile", {
+    pageTitle: "Profile",
+    currentPage: "profile",
+    isLoggedIn: true,
+    user: req.session.user,
+    errors: [],
+    oldInput: {},
+  });
+};
+
+exports.postProfile = async (req, res, next) => {
+  if (!req.session.isLoggedIn) {
+    return res.redirect("/login");
+  }
+  const { firstName, lastName, email } = req.body;
+  const user = await User.findById(req.session.user._id);
+  if (!user) {
+    return res.status(422).render("auth/profile", {
+      pageTitle: "Profile",
+      currentPage: "profile",
+      isLoggedIn: true,
+      user: req.session.user,
+      errors: [{ msg: "User not found" }],
+      oldInput: {},
+    });
+  }
+}
